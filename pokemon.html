@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ポケモンGO イベントカレンダー & レイド情報</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #12121a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 950px;
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 2px solid #3b5ba9;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        h1, h2 {
+            color: #ffcb05;
+            margin: 0;
+            text-align: center;
+            flex-grow: 1;
+        }
+        h1 { font-size: 1.4em; }
+        
+        .btn {
+            background: #3b5ba9;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95em;
+            min-width: 105px;
+            text-align: center;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .btn:hover {
+            background: #4b6bc9;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            background: #3b5ba9;
+            padding: 10px 0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .weekdays div:nth-child(1) { color: #ff7070; }
+        .weekdays div:nth-child(7) { color: #70b5ff; }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+        .day-cell {
+            background: #2a2a40;
+            min-height: 125px;
+            border-radius: 6px;
+            padding: 6px;
+            box-sizing: border-box;
+            font-size: 0.8em;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid transparent;
+        }
+        .day-cell.empty {
+            background: #1e1e2f;
+            opacity: 0.4;
+        }
+
+        .day-cell.today {
+            border: 2px solid #ffcb05 !important;
+            background: #282848 !important;
+            box-shadow: inset 0 0 10px rgba(255, 203, 5, 0.2);
+        }
+        .day-cell.today .day-num {
+            color: #ffcb05 !important;
+            font-weight: 900;
+        }
+
+        .day-num {
+            font-weight: bold;
+            text-align: right;
+            color: #ccc;
+            margin-bottom: 2px;
+        }
+        .day-cell:nth-child(7n+1) .day-num { color: #ff7070; }
+        .day-cell:nth-child(7n) .day-num { color: #70b5ff; }
+
+        .event {
+            background: linear-gradient(135deg, #e53935, #c62828);
+            color: white;
+            padding: 4px 6px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+        .event.blue { background: linear-gradient(135deg, #1fa2ff, #12d8fa); }
+        .event.cyan { background: linear-gradient(135deg, #00b4db, #0083b0); }
+        .event.purple { background: linear-gradient(135deg, #ab83e6, #845ec2); }
+        .event.gray { background: linear-gradient(135deg, #6c757d, #495057); }
+        .event.green { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .event.orange { background: linear-gradient(135deg, #ffb74d, #ffa726); color: white; }
+        .event.pink { background: linear-gradient(135deg, #ffb8d0, #ff8fae); color: white; }
+        .event span { color: white !important; font-weight: bold; }
+
+        .event.span-start {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+            margin-right: -6px !important;
+            position: relative;
+            z-index: 5;
+        }
+        .event.span-end {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            margin-left: -6px !important;
+            position: relative;
+            z-index: 5;
+        }
+        .event.span-middle {
+            border-radius: 0 !important;
+            margin-left: -6px !important;
+            margin-right: -6px !important;
+            position: relative;
+            z-index: 5;
+        }
+
+        .event img, 
+        .img-group img:first-child, 
+        .img-overlap img.poke-bg,
+        .img-group-multi > img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            padding: 2px;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-sizing: border-box;
+            transform: scale(1.15);
+        }
+
+        .item-icon {
+            width: 24px !important;
+            height: 24px !important;
+            object-fit: contain;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            transform: none !important;
+        }
+
+        .img-group {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            margin-right: 4px;
+        }
+        .img-group img:first-child { display: block; }
+        .img-group img:not(:first-child) {
+            position: absolute;
+            right: -2px;
+            bottom: -2px;
+            width: 16px !important;
+            height: 16px !important;
+            object-fit: contain;
+            z-index: 2;
+        }
+        .img-group.badge-top img:not(:first-child) { bottom: auto; top: -2px; }
+
+        .img-overlap {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            margin-right: 4px;
+        }
+        .img-overlap img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 36px; height: 36px;
+            object-fit: contain;
+            box-sizing: border-box;
+        }
+        .img-overlap img.poke-bg { z-index: 1; }
+        .img-overlap img.shadow-fg {
+            z-index: 2;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            transform: none !important;
+        }
+
+        /* レイド情報用オーバーラップ画像（大きめ） */
+        .boss-img-overlap {
+            position: relative;
+            display: inline-block;
+            width: 95px;
+            height: 95px;
+            margin-bottom: 6px;
+        }
+        .boss-img-overlap img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 95px; height: 95px;
+            object-fit: contain;
+            box-sizing: border-box;
+        }
+        .boss-img-overlap img.poke-bg { z-index: 1; }
+        .boss-img-overlap img.shadow-fg {
+            z-index: 2;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            width: 32px !important;
+            height: 32px !important;
+        }
+
+        .img-group-multi {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .img-group-multi > .img-overlap { width: 36px; height: 36px; }
+        .img-group-multi > .img-overlap img { width: 36px; height: 36px; }
+        .img-group-multi > .img-overlap img.poke-bg { z-index: 1; }
+        .img-group-multi > .img-overlap img.shadow-fg {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+        }
+        .img-group-multi > *:not(:first-child) { margin-left: -12px; }
+        .img-group-multi > *:nth-child(1) { z-index: 1; }
+        .img-group-multi > *:nth-child(2) { z-index: 2; }
+        .img-group-multi > *:nth-child(3) { z-index: 3; }
+        .img-group-multi > *:nth-child(4) { z-index: 4; }
+
+        /* レイド情報セクションのデザイン */
+        .raid-info-container {
+            width: 100%;
+            max-width: 950px;
+            background: #1a1a2e;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border: 2px solid #3b5ba9;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-top: 20px;
+            touch-action: pan-y;
+        }
+        .raid-info-container h3 {
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #3b5ba9;
+            padding-bottom: 8px;
+            color: #ffcb05;
+        }
+        .raid-section { margin-bottom: 20px; }
+        .raid-section:last-child { margin-bottom: 0; }
+        
+        .raid-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #ddd;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            vertical-align: middle;
+        }
+        
+        .raid-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        @media (max-width: 600px) {
+            .raid-cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .boss-card {
+            background: #22223b;
+            border: 1px solid #3b5ba9;
+            border-radius: 12px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .boss-left {
+            flex: 1.1;
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            border-right: 1px solid #3b5ba9;
+            background: rgba(0,0,0,0.1);
+        }
+        .shiny-icon-img { 
+            position: absolute; 
+            top: 6px; 
+            left: 6px; 
+            width: 22px; 
+            height: 22px; 
+            object-fit: contain; 
+        }
+        .boss-img { 
+            width: 95px; 
+            height: 95px; 
+            object-fit: contain; 
+            margin-bottom: 6px; 
+        }
+        
+        .boss-name { font-size: 1.25em; font-weight: bold; color: #fff; margin: 2px 0 10px 0; text-align: center; }
+        
+        .boss-types { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+            align-items: center; 
+            width: 100%;
+        }
+        .type-badge { 
+            font-size: 0.85em; 
+            padding: 4px 0; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            color: white; 
+            text-align: center; 
+            width: 85px;
+        }
+        
+        .boss-right { 
+            flex: 1; 
+            padding: 14px 10px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+        }
+        .cp-block { text-align: center; }
+        
+        .cp-label { font-size: 1em; color: #bbb; margin-bottom: 4px; font-weight: bold; }
+        .cp-value { font-size: 1.55em; font-weight: bold; color: #ffcb05; letter-spacing: 0.5px; }
+        
+        .weather-divider {
+            border: none;
+            border-top: 1px solid rgba(59, 91, 169, 0.6);
+            margin: 10px 0;
+            width: 100%;
+        }
+        .weather-icons {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin: 2px 0 4px 0;
+            align-items: center;
+        }
+        .weather-icon-img {
+            width: 26px;
+            height: 26px;
+            object-fit: contain;
+        }
+
+        /* タイプカラー定義 */
+        .bg-fire { background: #ff7035; }
+        .bg-water { background: #3b9bf1; }
+        .bg-electric { background: #fcd53f; color: #333 !important; }
+        .bg-grass { background: #71c558; }
+        .bg-ice { background: #51c4e7; }
+        .bg-fighting { background: #ce4069; }
+        .bg-poison { background: #ab6ac8; }
+        .bg-ground { background: #d97844; }
+        .bg-flying { background: #8198ec; }
+        .bg-psychic { background: #f8728d; }
+        .bg-bug { background: #90c12c; }
+        .bg-rock { background: #c5b67e; }
+        .bg-ghost { background: #5269ac; }
+        .bg-dragon { background: #0a6dc4; }
+        .bg-dark { background: #5a5365; }
+        .bg-steel { background: #52869d; }
+        .bg-fairy { background: #ec8fe6; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="calendar-container">
+        <div class="header">
+            <button class="btn" id="prev-btn">&lt; 前の月</button>
+            <h1 id="month-title">2026年 9月</h1>
+            <button class="btn" id="next-btn">次の月 &gt;</button>
+        </div>
+
+        <div class="weekdays">
+            <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+        </div>
+
+        <div class="days-grid" id="days-grid"></div>
+    </div>
+
+    <!-- カレンダー下のレイド情報 -->
+    <div class="raid-info-container" id="raid-info-container">
+        <h3 id="raidHeaderTitle">今月のレイド情報</h3>
+        
+        <div class="raid-section">
+            <div class="raid-title">
+                <img src="https://pokemongo-raku.com/wp-content/uploads/images/icon/legendary_icon.png" class="section-icon" alt="伝説レイド"> 伝説レイド
+            </div>
+            <div class="raid-cards-grid" id="legendaryList"></div>
+        </div>
+
+        <div class="raid-section" style="margin-top: 20px;">
+            <div class="raid-title">
+                <img src="https://pokemongo-raku.com/wp-content/uploads/images/icon/shadow_raidbattle_icon.png" class="section-icon" alt="シャドウレイド"> シャドウレイド
+            </div>
+            <div class="raid-cards-grid" id="shadowList"></div>
+        </div>
+
+        <div class="raid-section" style="margin-top: 20px;">
+            <div class="raid-title">
+                <img src="https://pokemongo-raku.com/wp-content/uploads/images/icon/mega_raid_icon.png" class="section-icon" alt="メガレイド"> メガレイド
+            </div>
+            <div class="raid-cards-grid" id="megaList"></div>
+        </div>
+    </div>
+
+    <script>
+        const monthTitle = document.getElementById('month-title');
+        const daysGrid = document.getElementById('days-grid');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const calendarContainer = document.getElementById('calendar-container');
+        const raidInfoContainer = document.getElementById('raid-info-container');
+
+        const raidHeaderTitle = document.getElementById('raidHeaderTitle');
+        const legendaryList = document.getElementById('legendaryList');
+        const shadowList = document.getElementById('shadowList');
+        const megaList = document.getElementById('megaList');
+
+        let currentDate = new Date();
+
+        const weatherMap = {
+            "☀️": "https://pokemongo-raku.com/wp-content/uploads/images/icon/sunny.png",
+            "🌧️": "https://pokemongo-raku.com/wp-content/uploads/images/icon/rain.png",
+            "☁️": "https://pokemongo-raku.com/wp-content/uploads/images/icon/cloudy.png",
+            "🌬️": "https://pokemongo-raku.com/wp-content/uploads/images/icon/windy.png",
+            "🌫️": "https://pokemongo-raku.com/wp-content/uploads/images/icon/fog.png",
+            "❄️": "https://pokemongo-raku.com/wp-content/uploads/images/icon/snow.png",
+            "⛰️": "https://pokemongo-raku.com/wp-content/uploads/images/icon/partly_cloudy.png"
+        };
+
+        const raidData = {
+            "2026-10": {
+                legendary: [
+                    { name: "ゼルネアス", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/716-1.png", types: [{name:"フェアリー", cls:"bg-fairy"}], cp100: "2160", weatherCp: "2701", shiny: true, weather: ["☁️"] },
+                    { name: "イベルタル", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/717-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ひこう", cls:"bg-flying"}], cp100: "2160", weatherCp: "2701", shiny: true, weather: ["🌫️", "🌬️"] },
+                    { name: "ディアルガ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/483-1.png", types: [{name:"はがね", cls:"bg-steel"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "2307", weatherCp: "2884", shiny: true, weather: ["❄️", "🌬️"] },
+                    { name: "パルキア", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/484-1.png", types: [{name:"みず", cls:"bg-water"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "2280", weatherCp: "2850", shiny: true, weather: ["🌧️", "🌬️"] },
+                    { name: "ギラティナ(オリジン)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/487-1.png", types: [{name:"ゴースト", cls:"bg-ghost"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "2105", weatherCp: "2631", shiny: true, weather: ["🌫️", "🌬️"] }
+                ],
+                shadow: [
+                    { name: "ボルトロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/642-1.png", types: [{name:"でんき", cls:"bg-electric"}, {name:"ひこう", cls:"bg-flying"}], cp100: "1911", weatherCp: "2389", shiny: true, weather: ["🌧️", "🌬️"] },
+                    { name: "ランドロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/645-1.png", types: [{name:"じめん", cls:"bg-ground"}, {name:"ひこう", cls:"bg-flying"}], cp100: "2050", weatherCp: "2563", shiny: true, weather: ["☀️", "🌬️"] }
+                ],
+                mega: [
+                    { name: "メガウツボット", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/71-1.png", types: [{name:"くさ", cls:"bg-grass"}, {name:"どく", cls:"bg-poison"}], cp100: "1389", weatherCp: "1736", shiny: true, weather: ["☀️", "☁️"] },
+                    { name: "メガカイリュー", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/149-1.png", types: [{name:"ドラゴン", cls:"bg-dragon"}, {name:"ひこう", cls:"bg-flying"}], cp100: "2167", weatherCp: "2709", shiny: true, weather: ["🌬️", "⛰️"] },
+                    { name: "メガリザードンX", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/6-1.png", types: [{name:"ほのお", cls:"bg-fire"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "1651", weatherCp: "2064", shiny: true, weather: ["☀️", "🌬️"] },
+                    { name: "メガカメックス", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/9-1.png", types: [{name:"みず", cls:"bg-water"}], cp100: "1409", weatherCp: "1761", shiny: true, weather: ["🌧️"] },
+                    { name: "メガヤミラミ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/302-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ゴースト", cls:"bg-ghost"}], cp100: "843", weatherCp: "1054", shiny: true, weather: ["🌫️"] }
+                ]
+            },
+            "2026-11": {
+                legendary: [
+                    { name: "ギラティナ(オリジン)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/487-1.png", types: [{name:"ゴースト", cls:"bg-ghost"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "2105", weatherCp: "2631", shiny: true, weather: ["🌫️", "🌬️"] }
+                ],
+                shadow: [
+                    { name: "ランドロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/645-1.png", types: [{name:"じめん", cls:"bg-ground"}, {name:"ひこう", cls:"bg-flying"}], cp100: "2050", weatherCp: "2563", shiny: true, weather: ["☀️", "🌬️"] }
+                ],
+                mega: [
+                    { name: "メガヤミラミ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/302-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ゴースト", cls:"bg-ghost"}], cp100: "843", weatherCp: "1054", shiny: true, weather: ["🌫️"] }
+                ]
+            }
+        };
+
+        const events = {
+            "2026-09-28": [
+                { text: "マックスマンデー", type: "orange", badgePos: "top", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/816-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/maxbattle_icon.png"] }
+            ],
+            "2026-09-29": [
+                { text: "カジッチュ集め", type: "purple", span: "start", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/840-1.png" }
+            ],
+            "2026-09-30": [
+                { text: "カジッチュ集め", type: "purple", span: "end", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/840-1.png" },
+                { text: "レイド入れ替え", type: "green", multi: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/716-1.png", "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/71-1.png"] }
+            ],
+            "2026-10-01": [
+                { text: "カジッチュ集め", type: "purple", span: "start", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/840-1.png" },
+                { text: "捕獲×2", type: "blue", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/273-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/xp.png"] }
+            ],
+            "2026-10-02": [
+                { text: "カジッチュ集め", type: "purple", span: "middle", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/840-1.png" },
+                { text: "占拠", type: "gray", span: "start", customImgs: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/644-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/shadow_raid_icon.png"] }
+            ],
+            "2026-10-03": [
+                { text: "カジッチュ集め", type: "purple", span: "middle", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/840-1.png" },
+                { text: "占拠", type: "gray", span: "middle", customImgs: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/644-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/shadow_raid_icon.png"] },
+                { text: "マックスバトルデイ", type: "red", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/815-1.png" }
+            ],
+            "2026-10-04": [
+                { text: "カジッチュ集め", type: "purple", span: "middle", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/840-1.png" },
+                { text: "占拠", type: "gray", span: "middle", customImgs: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/644-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/shadow_raid_icon.png"] }
+            ],
+            "2026-10-05": [
+                { text: "カジッチュ集め", type: "purple", span: "end", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/840-1.png" },
+                { text: "占拠", type: "gray", span: "end", customImgs: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/644-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/shadow_raid_icon.png"] },
+                { text: "マックスマンデー", type: "orange", badgePos: "top", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/850-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/maxbattle_icon.png"] }
+            ],
+            "2026-10-07": [
+                { text: "レイド入れ替え", type: "green", customImgs: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/645-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/shadow_raid_icon.png", "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/717-1.png", "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/9-1.png"] }
+            ],
+            "2026-10-08": [
+                { text: "捕獲×2", type: "blue", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/605-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/candy_pokemon.png"] }
+            ],
+            "2026-10-10": [
+                { text: "コミュデイ", type: "pink", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/570-1.png" }
+            ],
+            "2026-10-12": [
+                { text: "マックスマンデー", type: "orange", badgePos: "top", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/821-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/maxbattle_icon.png"] }
+            ],
+            "2026-10-13": [
+                { text: "相棒と一緒", type: "red", span: "start", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/946-1.png" }
+            ],
+            "2026-10-14": [
+                { text: "相棒と一緒", type: "red", span: "middle", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/946-1.png" },
+                { text: "レイド入れ替え", type: "green", multi: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/483-1.png", "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/149-1.png"] }
+            ],
+            "2026-10-15": [
+                { text: "相棒と一緒", type: "red", span: "middle", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/946-1.png" },
+                { text: "博士×2", type: "blue", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/759-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/candy_pokemon.png"] }
+            ],
+            "2026-10-16": [
+                { text: "相棒と一緒", type: "red", span: "middle", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/946-1.png" }
+            ],
+            "2026-10-17": [
+                { text: "相棒と一緒", type: "red", span: "middle", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/946-1.png" },
+                { text: "ふかの日", type: "cyan", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/551-1.png" }
+            ],
+            "2026-10-18": [
+                { text: "相棒と一緒", type: "red", span: "middle", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/946-1.png" }
+            ],
+            "2026-10-19": [
+                { text: "相棒と一緒", type: "red", span: "end", img: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/946-1.png" },
+                { text: "マックスマンデー", type: "orange", badgePos: "top", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/215-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/maxbattle_icon.png"] }
+            ],
+            "2026-10-21": [
+                { text: "レイド入れ替え", type: "green", multi: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/484-1.png", "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/6-1.png", "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/6-2.png"] }
+            ],
+            "2026-10-22": [
+                { text: "星の砂×2", type: "blue", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/755-1.png", "https://pokedex.pokemongo-raku.com/wp-content/uploads/images/item/stardust.png"] }
+            ],
+            "2026-10-24": [
+                { text: "マックスバトルデイ", type: "red", img: "https://pokemongo-raku.com/wp-content/uploads/images/icon/task.png" }
+            ],
+            "2026-10-26": [
+                { text: "マックスマンデー", type: "orange", badgePos: "top", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/302-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/maxbattle_icon.png"] }
+            ],
+            "2026-10-28": [
+                { text: "レイド入れ替え", type: "green", multi: true, imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/487-1.png", "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/302-1.png"] }
+            ],
+            "2026-10-29": [
+                { text: "進化×2", type: "blue", imgs: ["https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/92-1.png", "https://pokemongo-raku.com/wp-content/uploads/images/icon/xp.png"] }
+            ],
+            "2026-10-31": [
+                { text: "スーパーメガレイド", type: "red", img: "https://pokemongo-raku.com/wp-content/uploads/images/icon/task.png" }
+            ]
+        };
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            monthTitle.textContent = `${year}年 ${month + 1}月`;
+            daysGrid.innerHTML = '';
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+
+            const todayObj = new Date();
+            const todayYear = todayObj.getFullYear();
+            const todayMonth = todayObj.getMonth();
+            const todayDate = todayObj.getDate();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                daysGrid.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= lastDay; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+
+                if (year === todayYear && month === todayMonth && day === todayDate) {
+                    cell.classList.add('today');
+                }
+
+                const dayNum = document.createElement('div');
+                dayNum.className = 'day-num';
+                dayNum.textContent = day + '日';
+                cell.appendChild(dayNum);
+
+                const mStr = String(month + 1).padStart(2, '0');
+                const dStr = String(day).padStart(2, '0');
+                const dateKey = `${year}-${mStr}-${dStr}`;
+
+                if (events[dateKey]) {
+                    events[dateKey].forEach(ev => {
+                        const evDiv = document.createElement('div');
+                        let spanClass = ev.span ? ` span-${ev.span}` : '';
+                        evDiv.className = `event ${ev.type || ''}${spanClass}`;
+
+                        if (ev.customImgs) {
+                            const container = document.createElement('div');
+                            container.className = 'img-group-multi';
+
+                            const overlapDiv = document.createElement('div');
+                            overlapDiv.className = 'img-overlap';
+                            
+                            const pokemonImg = document.createElement('img');
+                            pokemonImg.src = ev.imgs[0];
+                            pokemonImg.className = 'poke-bg';
+                            
+                            const iconImg = document.createElement('img');
+                            iconImg.src = ev.imgs[1];
+                            iconImg.className = 'shadow-fg';
+                            
+                            overlapDiv.appendChild(pokemonImg);
+                            overlapDiv.appendChild(iconImg);
+                            container.appendChild(overlapDiv);
+
+                            for (let k = 2; k < ev.imgs.length; k++) {
+                                const img = document.createElement('img');
+                                img.src = ev.imgs[k];
+                                container.appendChild(img);
+                            }
+                            evDiv.appendChild(container);
+
+                        } else if (ev.imgs) {
+                            const imgGroup = document.createElement('div');
+                            imgGroup.className = (ev.imgs.length > 2 || ev.multi) ? 'img-group-multi' : 'img-group';
+                            if (ev.badgePos === 'top') {
+                                imgGroup.classList.add('badge-top');
+                            }
+                            
+                            ev.imgs.forEach((src, idx) => {
+                                const img = document.createElement('img');
+                                img.src = src;
+                                if (idx > 0 && (src.includes('icon') || src.includes('item'))) {
+                                    img.className = 'item-icon';
+                                }
+                                imgGroup.appendChild(img);
+                            });
+                            evDiv.appendChild(imgGroup);
+                        } else if (ev.img) {
+                            const img = document.createElement('img');
+                            img.src = ev.img;
+                            if (ev.img.includes('icon') || ev.img.includes('item')) {
+                                img.className = 'item-icon';
+                            }
+                            evDiv.appendChild(img);
+                        }
+
+                        const textSpan = document.createElement('span');
+                        textSpan.textContent = ev.text;
+                        evDiv.appendChild(textSpan);
+
+                        cell.appendChild(evDiv);
+                    });
+                }
+
+                daysGrid.appendChild(cell);
+            }
+
+            updateRaidInfo(year, month + 1);
+        }
+
+        function updateRaidInfo(year, month) {
+            const key = `${year}-${month}`;
+            const data = raidData[key] || { 
+                legendary: [{ name: "情報なし", image: "", types: [{name:"不明", cls:"bg-dark"}], cp100: "---", weatherCp: "---", shiny: false, weather: ["☁️"] }], 
+                shadow: [],
+                mega: [{ name: "情報なし", image: "", types: [{name:"不明", cls:"bg-dark"}], cp100: "---", weatherCp: "---", shiny: false, weather: ["☁️"] }] 
+            };
+
+            raidHeaderTitle.textContent = `${year}年 ${month}月のレイド情報`;
+
+            legendaryList.innerHTML = '';
+            (data.legendary || []).forEach(boss => legendaryList.appendChild(createBossCard(boss, false)));
+
+            shadowList.innerHTML = '';
+            (data.shadow || []).forEach(boss => shadowList.appendChild(createBossCard(boss, true)));
+
+            megaList.innerHTML = '';
+            (data.mega || []).forEach(boss => megaList.appendChild(createBossCard(boss, false)));
+        }
+
+        function createBossCard(boss, isShadow = false) {
+            const card = document.createElement('div');
+            card.className = 'boss-card';
+
+            const leftDiv = document.createElement('div');
+            leftDiv.className = 'boss-left';
+            
+            if (boss.shiny) {
+                const shiny = document.createElement('img');
+                shiny.className = 'shiny-icon-img';
+                shiny.src = 'https://pokemongo-raku.com/wp-content/uploads/images/icon/shiny_icon.png';
+                shiny.alt = '色違い';
+                leftDiv.appendChild(shiny);
+            }
+
+            if (boss.image) {
+                if (isShadow) {
+                    const overlapDiv = document.createElement('div');
+                    overlapDiv.className = 'boss-img-overlap';
+                    
+                    const img = document.createElement('img');
+                    img.className = 'poke-bg';
+                    img.src = boss.image;
+                    
+                    const shadowIcon = document.createElement('img');
+                    shadowIcon.className = 'shadow-fg';
+                    shadowIcon.src = 'https://pokemongo-raku.com/wp-content/uploads/images/icon/shadow_raid_icon.png';
+                    
+                    overlapDiv.appendChild(img);
+                    overlapDiv.appendChild(shadowIcon);
+                    leftDiv.appendChild(overlapDiv);
+                } else {
+                    const img = document.createElement('img');
+                    img.className = 'boss-img';
+                    img.src = boss.image;
+                    leftDiv.appendChild(img);
+                }
+            }
+
+            const name = document.createElement('div');
+            name.className = 'boss-name';
+            name.textContent = boss.name;
+            leftDiv.appendChild(name);
+
+            const typesDiv = document.createElement('div');
+            typesDiv.className = 'boss-types';
+            boss.types.forEach(t => {
+                const badge = document.createElement('span');
+                badge.className = `type-badge ${t.cls}`;
+                badge.textContent = t.name;
+                typesDiv.appendChild(badge);
+            });
+            leftDiv.appendChild(typesDiv);
+
+            const rightDiv = document.createElement('div');
+            rightDiv.className = 'boss-right';
+            
+            const weatherHtml = boss.weather ? boss.weather.map(w => {
+                const iconUrl = weatherMap[w];
+                return iconUrl ? `<img src="${iconUrl}" class="weather-icon-img" alt="天候">` : w;
+            }).join(' ') : '<img src="https://pokemongo-raku.com/wp-content/uploads/images/icon/cloudy.png" class="weather-icon-img" alt="曇り">';
+
+            rightDiv.innerHTML = `
+                <div class="cp-block">
+                    <div class="cp-label">個体値100%</div>
+                    <div class="cp-value">${boss.cp100}</div>
+                </div>
+                <hr class="weather-divider">
+                <div class="cp-block">
+                    <div class="cp-label">天候ブースト</div>
+                    <div class="weather-icons">${weatherHtml}</div>
+                    <div class="cp-value">${boss.weatherCp}</div>
+                </div>
+            `;
+
+            card.appendChild(leftDiv);
+            card.appendChild(rightDiv);
+            return card;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        function setupSwipe(element) {
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            element.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            element.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                const threshold = 50;
+                if (touchEndX < touchStartX - threshold) {
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                    renderCalendar();
+                } else if (touchEndX > touchStartX + threshold) {
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                    renderCalendar();
+                }
+            }, { passive: true });
+        }
+
+        // カレンダー側のスワイプ切り替えのみ無効化しました
+        setupSwipe(raidInfoContainer);
+
+        renderCalendar();
+    </script>
+</body>
+</html>

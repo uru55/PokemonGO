@@ -231,13 +231,16 @@
             transform: none !important;
         }
 
-        /* レイド情報用オーバーラップ画像（ポケモンと同じ大きさ） */
+        /* レイド情報用オーバーラップ画像 */
         .boss-img-overlap {
             position: relative;
             display: inline-block;
             width: 95px;
             height: 95px;
             margin-bottom: 6px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .boss-img-overlap img {
             position: absolute;
@@ -345,7 +348,6 @@
             border-right: 1px solid #3b5ba9;
             background: rgba(0,0,0,0.1);
         }
-        /* --- ここで色違いアイコンのサイズを大きく変更しました --- */
         .shiny-icon-img { 
             position: absolute; 
             top: 6px; 
@@ -359,10 +361,34 @@
             height: 95px; 
             object-fit: contain; 
             margin-bottom: 6px; 
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
         }
         
         .boss-name { font-size: 1.25em; font-weight: bold; color: #fff; margin: 2px 0 10px 0; text-align: center; }
         
+        /* 押している間だけ表示する弱点エリア（初期状態は非表示） */
+        .boss-weakness-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            margin: 2px 0 10px 0;
+            width: 100%;
+        }
+        .weakness-label {
+            font-size: 0.75em;
+            color: #ffcb05;
+            font-weight: bold;
+        }
+        .weakness-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+        }
+
         .boss-types { 
             display: flex; 
             flex-direction: column; 
@@ -411,7 +437,6 @@
             object-fit: contain;
         }
 
-        /* モーダル用のスタイル（大きくサイズアップ） */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -449,7 +474,6 @@
             color: #ffcb05;
         }
 
-        /* タイプカラー定義 */
         .bg-fire { background: #ff7035; }
         .bg-water { background: #3b9bf1; }
         .bg-electric { background: #fcd53f; color: #333 !important; }
@@ -485,7 +509,6 @@
         <div class="days-grid" id="days-grid"></div>
     </div>
 
-    <!-- カレンダー下のレイド情報 -->
     <div class="raid-info-container" id="raid-info-container">
         <h3 id="raidHeaderTitle">今月のレイド情報</h3>
         
@@ -511,7 +534,6 @@
         </div>
     </div>
 
-    <!-- エースバーン表示用モーダル（大きくサイズアップ） -->
     <div class="modal-overlay" id="cinderaceModal">
         <div class="modal-content">
             <button class="modal-close" id="modalCloseBtn">&times;</button>
@@ -566,33 +588,33 @@
         const raidData = {
             "2026-10": {
                 legendary: [
-                    { name: "ゼルネアス", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/716-1.png", types: [{name:"フェアリー", cls:"bg-fairy"}], cp100: "2160", weatherCp: "2701", shiny: true, weather: ["☁️"] },
-                    { name: "イベルタル", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/717-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ひこう", cls:"bg-flying"}], cp100: "2160", weatherCp: "2701", shiny: true, weather: ["🌫️", "🌬️"] },
-                    { name: "ディアルガ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/483-1.png", types: [{name:"はがね", cls:"bg-steel"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "2307", weatherCp: "2884", shiny: true, weather: ["❄️", "🌬️"] },
-                    { name: "パルキア", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/484-1.png", types: [{name:"みず", cls:"bg-water"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "2280", weatherCp: "2850", shiny: true, weather: ["🌧️", "🌬️"] },
-                    { name: "ギラティナ(オリジン)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/487-1.png", types: [{name:"ゴースト", cls:"bg-ghost"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "2105", weatherCp: "2631", shiny: true, weather: ["🌫️", "🌬️"] }
+                    { name: "ゼルネアス", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/716-1.png", types: [{name:"フェアリー", cls:"bg-fairy"}], weaknesses: [{name:"どく", cls:"bg-poison"}, {name:"はがね", cls:"bg-steel"}], cp100: "2160", weatherCp: "2701", shiny: true, weather: ["☁️"] },
+                    { name: "イベルタル", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/717-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ひこう", cls:"bg-flying"}], weaknesses: [{name:"でんき", cls:"bg-electric"}, {name:"こおり", cls:"bg-ice"}, {name:"いわ", cls:"bg-rock"}, {name:"フェアリー", cls:"bg-fairy"}], cp100: "2160", weatherCp: "2701", shiny: true, weather: ["🌫️", "🌬️"] },
+                    { name: "ディアルガ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/483-1.png", types: [{name:"はがね", cls:"bg-steel"}, {name:"ドラゴン", cls:"bg-dragon"}], weaknesses: [{name:"かくとう", cls:"bg-fighting"}, {name:"じめん", cls:"bg-ground"}], cp100: "2307", weatherCp: "2884", shiny: true, weather: ["❄️", "🌬️"] },
+                    { name: "パルキア", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/484-1.png", types: [{name:"みず", cls:"bg-water"}, {name:"ドラゴン", cls:"bg-dragon"}], weaknesses: [{name:"こおり", cls:"bg-ice"}, {name:"ドラゴン", cls:"bg-dragon"}, {name:"フェアリー", cls:"bg-fairy"}], cp100: "2280", weatherCp: "2850", shiny: true, weather: ["🌧️", "🌬️"] },
+                    { name: "ギラティナ(オリジン)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/487-1.png", types: [{name:"ゴースト", cls:"bg-ghost"}, {name:"ドラゴン", cls:"bg-dragon"}], weaknesses: [{name:"こおり", cls:"bg-ice"}, {name:"ゴースト", cls:"bg-ghost"}, {name:"ドラゴン", cls:"bg-dragon"}, {name:"あく", cls:"bg-dark"}, {name:"フェアリー", cls:"bg-fairy"}], cp100: "2105", weatherCp: "2631", shiny: true, weather: ["🌫️", "🌬️"] }
                 ],
                 shadow: [
-                    { name: "ボルトロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/642-1.png", types: [{name:"でんき", cls:"bg-electric"}, {name:"ひこう", cls:"bg-flying"}], cp100: "1911", weatherCp: "2389", shiny: true, weather: ["🌧️", "🌬️"] },
-                    { name: "ランドロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/645-1.png", types: [{name:"じめん", cls:"bg-ground"}, {name:"ひこう", cls:"bg-flying"}], cp100: "2050", weatherCp: "2563", shiny: true, weather: ["☀️", "🌬️"] }
+                    { name: "ボルトロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/642-1.png", types: [{name:"でんき", cls:"bg-electric"}, {name:"ひこう", cls:"bg-flying"}], weaknesses: [{name:"こおり", cls:"bg-ice"}, {name:"いわ", cls:"bg-rock"}], cp100: "1911", weatherCp: "2389", shiny: true, weather: ["🌧️", "🌬️"] },
+                    { name: "ランドロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/645-1.png", types: [{name:"じめん", cls:"bg-ground"}, {name:"ひこう", cls:"bg-flying"}], weaknesses: [{name:"こおり", cls:"bg-ice"}, {name:"みず", cls:"bg-water"}], cp100: "2050", weatherCp: "2563", shiny: true, weather: ["☀️", "🌬️"] }
                 ],
                 mega: [
-                    { name: "メガウツボット", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/71-1.png", types: [{name:"くさ", cls:"bg-grass"}, {name:"どく", cls:"bg-poison"}], cp100: "1389", weatherCp: "1736", shiny: true, weather: ["☀️", "☁️"] },
-                    { name: "メガカイリュー", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/149-1.png", types: [{name:"ドラゴン", cls:"bg-dragon"}, {name:"ひこう", cls:"bg-flying"}], cp100: "2167", weatherCp: "2709", shiny: true, weather: ["🌬️", "⛰️"] },
-                    { name: "メガリザードンX", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/6-1.png", types: [{name:"ほのお", cls:"bg-fire"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "1651", weatherCp: "2064", shiny: true, weather: ["☀️", "🌬️"] },
-                    { name: "メガカメックス", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/9-1.png", types: [{name:"みず", cls:"bg-water"}], cp100: "1409", weatherCp: "1761", shiny: true, weather: ["🌧️"] },
-                    { name: "メガヤミラミ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/302-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ゴースト", cls:"bg-ghost"}], cp100: "843", weatherCp: "1054", shiny: true, weather: ["🌫️"] }
+                    { name: "メガウツボット", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/71-1.png", types: [{name:"くさ", cls:"bg-grass"}, {name:"どく", cls:"bg-poison"}], weaknesses: [{name:"ほのお", cls:"bg-fire"}, {name:"こおり", cls:"bg-ice"}, {name:"ひこう", cls:"bg-flying"}, {name:"エスパー", cls:"bg-psychic"}], cp100: "1389", weatherCp: "1736", shiny: true, weather: ["☀️", "☁️"] },
+                    { name: "メガカイリュー", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/149-1.png", types: [{name:"ドラゴン", cls:"bg-dragon"}, {name:"ひこう", cls:"bg-flying"}], weaknesses: [{name:"こおり", cls:"bg-ice"}, {name:"いわ", cls:"bg-rock"}, {name:"ドラゴン", cls:"bg-dragon"}, {name:"フェアリー", cls:"bg-fairy"}], cp100: "2167", weatherCp: "2709", shiny: true, weather: ["🌬️", "⛰️"] },
+                    { name: "メガリザードンX", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/6-1.png", types: [{name:"ほのお", cls:"bg-fire"}, {name:"ドラゴン", cls:"bg-dragon"}], weaknesses: [{name:"みず", cls:"bg-water"}, {name:"じめん", cls:"bg-ground"}, {name:"いわ", cls:"bg-rock"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "1651", weatherCp: "2064", shiny: true, weather: ["☀️", "🌬️"] },
+                    { name: "メガカメックス", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/9-1.png", types: [{name:"みず", cls:"bg-water"}], weaknesses: [{name:"でんき", cls:"bg-electric"}, {name:"くさ", cls:"bg-grass"}], cp100: "1409", weatherCp: "1761", shiny: true, weather: ["🌧️"] },
+                    { name: "メガヤミラミ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/302-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ゴースト", cls:"bg-ghost"}], weaknesses: [{name:"フェアリー", cls:"bg-fairy"}], cp100: "843", weatherCp: "1054", shiny: true, weather: ["🌫️"] }
                 ]
             },
             "2026-11": {
                 legendary: [
-                    { name: "ギラティナ(オリジン)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/487-1.png", types: [{name:"ゴースト", cls:"bg-ghost"}, {name:"ドラゴン", cls:"bg-dragon"}], cp100: "2105", weatherCp: "2631", shiny: true, weather: ["🌫️", "🌬️"] }
+                    { name: "ギラティナ(オリジン)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/487-1.png", types: [{name:"ゴースト", cls:"bg-ghost"}, {name:"ドラゴン", cls:"bg-dragon"}], weaknesses: [{name:"こおり", cls:"bg-ice"}, {name:"ゴースト", cls:"bg-ghost"}, {name:"ドラゴン", cls:"bg-dragon"}, {name:"あく", cls:"bg-dark"}, {name:"フェアリー", cls:"bg-fairy"}], cp100: "2105", weatherCp: "2631", shiny: true, weather: ["🌫️", "🌬️"] }
                 ],
                 shadow: [
-                    { name: "ランドロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/645-1.png", types: [{name:"じめん", cls:"bg-ground"}, {name:"ひこう", cls:"bg-flying"}], cp100: "2050", weatherCp: "2563", shiny: true, weather: ["☀️", "🌬️"] }
+                    { name: "ランドロス(化身)", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/645-1.png", types: [{name:"じめん", cls:"bg-ground"}, {name:"ひこう", cls:"bg-flying"}], weaknesses: [{name:"こおり", cls:"bg-ice"}, {name:"みず", cls:"bg-water"}], cp100: "2050", weatherCp: "2563", shiny: true, weather: ["☀️", "🌬️"] }
                 ],
                 mega: [
-                    { name: "メガヤミラミ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/302-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ゴースト", cls:"bg-ghost"}], cp100: "843", weatherCp: "1054", shiny: true, weather: ["🌫️"] }
+                    { name: "メガヤミラミ", image: "https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo_form/3d/302-1.png", types: [{name:"あく", cls:"bg-dark"}, {name:"ゴースト", cls:"bg-ghost"}], weaknesses: [{name:"フェアリー", cls:"bg-fairy"}], cp100: "843", weatherCp: "1054", shiny: true, weather: ["🌫️"] }
                 ]
             }
         };
@@ -841,10 +863,13 @@
                 leftDiv.appendChild(shiny);
             }
 
+            let targetElement;
+
             if (boss.image) {
                 if (isShadow) {
                     const overlapDiv = document.createElement('div');
                     overlapDiv.className = 'boss-img-overlap';
+                    overlapDiv.title = '押している間弱点を表示';
                     
                     const img = document.createElement('img');
                     img.className = 'poke-bg';
@@ -857,11 +882,15 @@
                     overlapDiv.appendChild(img);
                     overlapDiv.appendChild(shadowIcon);
                     leftDiv.appendChild(overlapDiv);
+                    targetElement = overlapDiv;
                 } else {
                     const img = document.createElement('img');
                     img.className = 'boss-img';
                     img.src = boss.image;
+                    img.title = '押している間弱点を表示';
+                    
                     leftDiv.appendChild(img);
+                    targetElement = img;
                 }
             }
 
@@ -869,6 +898,38 @@
             name.className = 'boss-name';
             name.textContent = boss.name;
             leftDiv.appendChild(name);
+
+            // 押している間だけ表示される弱点エリア（名前は消さずにその下に表示）
+            const weaknessArea = document.createElement('div');
+            weaknessArea.className = 'boss-weakness-area';
+
+            const wLabel = document.createElement('div');
+            wLabel.className = 'weakness-label';
+            wLabel.textContent = '【 弱点 】';
+            weaknessArea.appendChild(wLabel);
+
+            const wBadges = document.createElement('div');
+            wBadges.className = 'weakness-badges';
+
+            if (boss.weaknesses && boss.weaknesses.length > 0) {
+                boss.weaknesses.forEach(w => {
+                    const badge = document.createElement('span');
+                    badge.className = `type-badge ${w.cls}`;
+                    badge.style.fontSize = '0.75em';
+                    badge.style.padding = '2px 0';
+                    badge.style.width = '70px';
+                    badge.textContent = w.name;
+                    wBadges.appendChild(badge);
+                });
+            } else {
+                const noWeakness = document.createElement('span');
+                noWeakness.style.fontSize = '0.8em';
+                noWeakness.style.color = '#fff';
+                noWeakness.textContent = 'なし';
+                wBadges.appendChild(noWeakness);
+            }
+            weaknessArea.appendChild(wBadges);
+            leftDiv.appendChild(weaknessArea);
 
             const typesDiv = document.createElement('div');
             typesDiv.className = 'boss-types';
@@ -879,6 +940,26 @@
                 typesDiv.appendChild(badge);
             });
             leftDiv.appendChild(typesDiv);
+
+            // 押している間だけ弱点エリアを表示（名前は消さない）
+            const showWeakness = (e) => {
+                e.preventDefault();
+                weaknessArea.style.display = 'flex';
+            };
+
+            const hideWeakness = () => {
+                weaknessArea.style.display = 'none';
+            };
+
+            if (targetElement) {
+                targetElement.addEventListener('mousedown', showWeakness);
+                targetElement.addEventListener('mouseup', hideWeakness);
+                targetElement.addEventListener('mouseleave', hideWeakness);
+
+                targetElement.addEventListener('touchstart', showWeakness, { passive: false });
+                targetElement.addEventListener('touchend', hideWeakness);
+                targetElement.addEventListener('touchcancel', hideWeakness);
+            }
 
             const rightDiv = document.createElement('div');
             rightDiv.className = 'boss-right';
@@ -930,7 +1011,7 @@
                 if (touchEndX < touchStartX - threshold) {
                     currentDate.setMonth(currentDate.getMonth() + 1);
                     renderCalendar();
-                } else if (touchEndX > touchStartX + threshold) {
+                } else if (touchEndX > touchStartX - threshold) {
                     currentDate.setMonth(currentDate.getMonth() - 1);
                     renderCalendar();
                 }

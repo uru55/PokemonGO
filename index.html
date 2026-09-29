@@ -231,7 +231,6 @@
             transform: none !important;
         }
 
-        /* レイド情報用オーバーラップ画像 */
         .boss-img-overlap {
             position: relative;
             display: inline-block;
@@ -368,33 +367,13 @@
         
         .boss-name { font-size: 1.25em; font-weight: bold; color: #fff; margin: 2px 0 10px 0; text-align: center; }
         
-        /* 押している間だけ表示する弱点エリア（初期状態は非表示） */
-        .boss-weakness-area {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            margin: 2px 0 10px 0;
-            width: 100%;
-        }
-        .weakness-label {
-            font-size: 0.75em;
-            color: #ffcb05;
-            font-weight: bold;
-        }
-        .weakness-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            justify-content: center;
-        }
-
         .boss-types { 
             display: flex; 
             flex-direction: column; 
             gap: 5px; 
             align-items: center; 
             width: 100%;
+            margin-top: auto;
         }
         .type-badge { 
             font-size: 0.85em; 
@@ -437,12 +416,13 @@
             object-fit: contain;
         }
 
+        /* モーダル全体のサイズ・配置調整 */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -450,21 +430,21 @@
         .modal-content {
             background: #1a1a2e;
             border: 2px solid #3b5ba9;
-            padding: 35px 30px 30px 30px;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 420px;
+            padding: 40px 35px 35px 35px;
+            border-radius: 18px;
+            width: 92%;
+            max-width: 500px; /* モーダルをさらに大きく */
             text-align: center;
             position: relative;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
         }
         .modal-close {
             position: absolute;
-            top: 10px; right: 15px;
+            top: 12px; right: 18px;
             background: none;
             border: none;
             color: #fff;
-            font-size: 2.4em;
+            font-size: 2.8em; /* ×ボタンを大きく */
             font-weight: bold;
             cursor: pointer;
             line-height: 1;
@@ -534,16 +514,25 @@
         </div>
     </div>
 
+    <!-- 汎用レイドボス詳細ポップアップ（モーダル） -->
+    <div class="modal-overlay" id="bossModal">
+        <div class="modal-content">
+            <button class="modal-close" id="bossModalCloseBtn">&times;</button>
+            <div id="bossModalBody"></div>
+        </div>
+    </div>
+
+    <!-- マックスバトルデイ用モーダル -->
     <div class="modal-overlay" id="cinderaceModal">
         <div class="modal-content">
             <button class="modal-close" id="modalCloseBtn">&times;</button>
-            <h3 style="color: #ffcb05; margin-top: 0; font-size: 1.4em;">マックスバトルデイ</h3>
-            <div style="margin: 20px 0;">
-                <img src="https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/815-1.png" style="width: 130px; height: 130px; object-fit: contain;" alt="エースバーン">
+            <h3 style="color: #ffcb05; margin-top: 0; font-size: 1.6em; margin-bottom: 10px;">マックスバトルデイ</h3>
+            <div style="margin: 15px 0;">
+                <img src="https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/815-1.png" style="width: 150px; height: 150px; object-fit: contain;" alt="エースバーン">
             </div>
-            <div style="font-size: 1.5em; font-weight: bold; color: #fff; margin-bottom: 10px;">エースバーン</div>
-            <div style="font-size: 1.1em; color: #bbb; font-weight: bold; margin-bottom: 6px;">個体値100% CP</div>
-            <div style="font-size: 1.9em; font-weight: bold; color: #ffcb05;">1724</div>
+            <div style="font-size: 1.7em; font-weight: bold; color: #fff; margin-bottom: 12px;">エースバーン</div>
+            <div style="font-size: 1.2em; color: #bbb; font-weight: bold; margin-bottom: 6px;">個体値100% CP</div>
+            <div style="font-size: 2.2em; font-weight: bold; color: #ffcb05;">1724</div>
         </div>
     </div>
 
@@ -552,7 +541,6 @@
         const daysGrid = document.getElementById('days-grid');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
-        const calendarContainer = document.getElementById('calendar-container');
         const raidInfoContainer = document.getElementById('raid-info-container');
 
         const raidHeaderTitle = document.getElementById('raidHeaderTitle');
@@ -560,20 +548,45 @@
         const shadowList = document.getElementById('shadowList');
         const megaList = document.getElementById('megaList');
 
+        // モーダル関連
         const cinderaceModal = document.getElementById('cinderaceModal');
         const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const bossModal = document.getElementById('bossModal');
+        const bossModalCloseBtn = document.getElementById('bossModalCloseBtn');
+        const bossModalBody = document.getElementById('bossModalBody');
 
-        modalCloseBtn.addEventListener('click', () => {
-            cinderaceModal.style.display = 'none';
-        });
+        modalCloseBtn.addEventListener('click', () => cinderaceModal.style.display = 'none');
+        cinderaceModal.addEventListener('click', (e) => { if (e.target === cinderaceModal) cinderaceModal.style.display = 'none'; });
 
-        cinderaceModal.addEventListener('click', (e) => {
-            if (e.target === cinderaceModal) {
-                cinderaceModal.style.display = 'none';
-            }
-        });
+        bossModalCloseBtn.addEventListener('click', () => bossModal.style.display = 'none');
+        bossModal.addEventListener('click', (e) => { if (e.target === bossModal) bossModal.style.display = 'none'; });
 
         let currentDate = new Date();
+
+        // レイド情報エリアでの左右スワイプによる月切り替え機能
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        raidInfoContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        raidInfoContainer.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0) {
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                } else {
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                }
+                renderCalendar();
+            }
+        }, { passive: true });
 
         const weatherMap = {
             "☀️": "https://pokemongo-raku.com/wp-content/uploads/images/icon/sunny.png",
@@ -869,7 +882,7 @@
                 if (isShadow) {
                     const overlapDiv = document.createElement('div');
                     overlapDiv.className = 'boss-img-overlap';
-                    overlapDiv.title = '押している間弱点を表示';
+                    overlapDiv.title = 'タップして詳細・弱点を表示';
                     
                     const img = document.createElement('img');
                     img.className = 'poke-bg';
@@ -887,7 +900,7 @@
                     const img = document.createElement('img');
                     img.className = 'boss-img';
                     img.src = boss.image;
-                    img.title = '押している間弱点を表示';
+                    img.title = 'タップして詳細・弱点を表示';
                     
                     leftDiv.appendChild(img);
                     targetElement = img;
@@ -899,38 +912,6 @@
             name.textContent = boss.name;
             leftDiv.appendChild(name);
 
-            // 押している間だけ表示される弱点エリア（名前は消さずにその下に表示）
-            const weaknessArea = document.createElement('div');
-            weaknessArea.className = 'boss-weakness-area';
-
-            const wLabel = document.createElement('div');
-            wLabel.className = 'weakness-label';
-            wLabel.textContent = '【 弱点 】';
-            weaknessArea.appendChild(wLabel);
-
-            const wBadges = document.createElement('div');
-            wBadges.className = 'weakness-badges';
-
-            if (boss.weaknesses && boss.weaknesses.length > 0) {
-                boss.weaknesses.forEach(w => {
-                    const badge = document.createElement('span');
-                    badge.className = `type-badge ${w.cls}`;
-                    badge.style.fontSize = '0.75em';
-                    badge.style.padding = '2px 0';
-                    badge.style.width = '70px';
-                    badge.textContent = w.name;
-                    wBadges.appendChild(badge);
-                });
-            } else {
-                const noWeakness = document.createElement('span');
-                noWeakness.style.fontSize = '0.8em';
-                noWeakness.style.color = '#fff';
-                noWeakness.textContent = 'なし';
-                wBadges.appendChild(noWeakness);
-            }
-            weaknessArea.appendChild(wBadges);
-            leftDiv.appendChild(weaknessArea);
-
             const typesDiv = document.createElement('div');
             typesDiv.className = 'boss-types';
             boss.types.forEach(t => {
@@ -941,24 +922,11 @@
             });
             leftDiv.appendChild(typesDiv);
 
-            // 押している間だけ弱点エリアを表示（名前は消さない）
-            const showWeakness = (e) => {
-                e.preventDefault();
-                weaknessArea.style.display = 'flex';
-            };
-
-            const hideWeakness = () => {
-                weaknessArea.style.display = 'none';
-            };
-
             if (targetElement) {
-                targetElement.addEventListener('mousedown', showWeakness);
-                targetElement.addEventListener('mouseup', hideWeakness);
-                targetElement.addEventListener('mouseleave', hideWeakness);
-
-                targetElement.addEventListener('touchstart', showWeakness, { passive: false });
-                targetElement.addEventListener('touchend', hideWeakness);
-                targetElement.addEventListener('touchcancel', hideWeakness);
+                targetElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showBossDetailModal(boss, isShadow);
+                });
             }
 
             const rightDiv = document.createElement('div');
@@ -987,6 +955,41 @@
             return card;
         }
 
+        // ボス詳細ポップアップ（モーダル内の文字・画像・バッジを拡大）
+        function showBossDetailModal(boss, isShadow) {
+            let imgHtml = '';
+            if (isShadow) {
+                imgHtml = `
+                    <div style="position:relative; display:inline-block; width:150px; height:150px; margin-bottom:12px;">
+                        <img src="${boss.image}" style="position:absolute; top:0; left:0; width:150px; height:150px; object-fit:contain;">
+                        <img src="https://pokemongo-raku.com/wp-content/uploads/images/icon/shadow_raid_icon.png" style="position:absolute; top:0; left:0; width:150px; height:150px; object-fit:contain;">
+                    </div>
+                `;
+            } else {
+                imgHtml = `<img src="${boss.image}" style="width:150px; height:150px; object-fit:contain; margin-bottom:12px;" alt="${boss.name}">`;
+            }
+
+            let weaknessesHtml = '';
+            if (boss.weaknesses && boss.weaknesses.length > 0) {
+                boss.weaknesses.forEach(w => {
+                    weaknessesHtml += `<span class="type-badge ${w.cls}" style="display:inline-block; width:100px; font-size:1em; padding:6px 0;">${w.name}</span>`;
+                });
+            } else {
+                weaknessesHtml = '<span style="color:#fff; font-size:1.1em;">なし</span>';
+            }
+
+            bossModalBody.innerHTML = `
+                <h3 style="color: #ffcb05; margin-top: 0; font-size: 1.6em; margin-bottom: 15px;">${boss.name}</h3>
+                <div style="margin: 5px 0 10px 0;">${imgHtml}</div>
+                <div style="font-size: 1.3em; color: #ffcb05; font-weight: bold; margin-bottom: 12px;">【 弱点 】</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 10px;">
+                    ${weaknessesHtml}
+                </div>
+            `;
+
+            bossModal.style.display = 'flex';
+        }
+
         prevBtn.addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
             renderCalendar();
@@ -996,29 +999,6 @@
             currentDate.setMonth(currentDate.getMonth() + 1);
             renderCalendar();
         });
-
-        function setupSwipe(element) {
-            let touchStartX = 0;
-            let touchEndX = 0;
-
-            element.addEventListener('touchstart', e => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, { passive: true });
-
-            element.addEventListener('touchend', e => {
-                touchEndX = e.changedTouches[0].screenX;
-                const threshold = 50;
-                if (touchEndX < touchStartX - threshold) {
-                    currentDate.setMonth(currentDate.getMonth() + 1);
-                    renderCalendar();
-                } else if (touchEndX > touchStartX - threshold) {
-                    currentDate.setMonth(currentDate.getMonth() - 1);
-                    renderCalendar();
-                }
-            }, { passive: true });
-        }
-
-        setupSwipe(raidInfoContainer);
 
         renderCalendar();
     </script>

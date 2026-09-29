@@ -345,12 +345,13 @@
             border-right: 1px solid #3b5ba9;
             background: rgba(0,0,0,0.1);
         }
+        /* --- ここで色違いアイコンのサイズを大きく変更しました --- */
         .shiny-icon-img { 
             position: absolute; 
             top: 6px; 
             left: 6px; 
-            width: 22px; 
-            height: 22px; 
+            width: 34px; 
+            height: 34px; 
             object-fit: contain; 
         }
         .boss-img { 
@@ -410,7 +411,7 @@
             object-fit: contain;
         }
 
-        /* モーダル用のスタイル（×ボタンを大きく調整） */
+        /* モーダル用のスタイル（大きくサイズアップ） */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -424,21 +425,21 @@
         .modal-content {
             background: #1a1a2e;
             border: 2px solid #3b5ba9;
-            padding: 25px 20px 20px 20px;
+            padding: 35px 30px 30px 30px;
             border-radius: 16px;
             width: 90%;
-            max-width: 300px;
+            max-width: 420px;
             text-align: center;
             position: relative;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
         .modal-close {
             position: absolute;
-            top: 8px; right: 12px;
+            top: 10px; right: 15px;
             background: none;
             border: none;
             color: #fff;
-            font-size: 2.2em;
+            font-size: 2.4em;
             font-weight: bold;
             cursor: pointer;
             line-height: 1;
@@ -510,17 +511,17 @@
         </div>
     </div>
 
-    <!-- エースバーン表示用モーダル -->
+    <!-- エースバーン表示用モーダル（大きくサイズアップ） -->
     <div class="modal-overlay" id="cinderaceModal">
         <div class="modal-content">
             <button class="modal-close" id="modalCloseBtn">&times;</button>
-            <h3 style="color: #ffcb05; margin-top: 0; font-size: 1.2em;">マックスバトルデイ</h3>
-            <div style="margin: 15px 0;">
-                <img src="https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/815-1.png" style="width: 95px; height: 95px; object-fit: contain;" alt="エースバーン">
+            <h3 style="color: #ffcb05; margin-top: 0; font-size: 1.4em;">マックスバトルデイ</h3>
+            <div style="margin: 20px 0;">
+                <img src="https://pokemongo-get.com/wp-content/themes/simplicity2-child/images/pokemongo/815-1.png" style="width: 130px; height: 130px; object-fit: contain;" alt="エースバーン">
             </div>
-            <div style="font-size: 1.25em; font-weight: bold; color: #fff; margin-bottom: 8px;">エースバーン</div>
-            <div style="font-size: 1em; color: #bbb; font-weight: bold; margin-bottom: 4px;">個体値100% CP</div>
-            <div style="font-size: 1.6em; font-weight: bold; color: #ffcb05;">1724</div>
+            <div style="font-size: 1.5em; font-weight: bold; color: #fff; margin-bottom: 10px;">エースバーン</div>
+            <div style="font-size: 1.1em; color: #bbb; font-weight: bold; margin-bottom: 6px;">個体値100% CP</div>
+            <div style="font-size: 1.9em; font-weight: bold; color: #ffcb05;">1724</div>
         </div>
     </div>
 
@@ -807,7 +808,6 @@
 
         function updateRaidInfo(year, month) {
             const key = `${year}-${month}`;
-            // データが存在しない場合は空の配列を設定し、不要なカードが表示されないようにする
             const data = raidData[key] || { 
                 legendary: [], 
                 shadow: [],
